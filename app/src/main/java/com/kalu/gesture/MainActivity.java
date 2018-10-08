@@ -2,6 +2,12 @@ package com.kalu.gesture;
 
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
+
+import com.kalu.gesture.widget.GestureResultView;
+import com.kalu.gesture.widget.GestureView;
+
+import java.util.Arrays;
 
 public final class MainActivity extends AppCompatActivity {
 
@@ -11,6 +17,18 @@ public final class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+
+        final GestureView view1 = findViewById(R.id.gd_gesture_draw);
+        final GestureResultView view2 = findViewById(R.id.gr_gesture_result);
+
+        view1.setOnGestureChangeListener(new GestureView.OnGestureChangeListener() {
+            @Override
+            public void onChange(int[] data) {
+                Log.e("up", Arrays.toString(data));
+                view2.setDate(data);
+            }
+        });
 //
 //        gestureDrawView = findViewById(R.id.gd_gesture_draw);
 //        final GestureResultView gestureResultView = findViewById(R.id.gr_gesture_result);

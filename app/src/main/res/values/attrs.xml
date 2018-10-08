@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <!--手势绘制View-->
-    <declare-styleable name="GestureLookView">
+    <declare-styleable name="GestureView">
         <!--外圆半径、颜色、水平间距、垂直间距-->
         <attr name="gdOuterRadius" format="integer" />
         <attr name="gdOuterCheckCol" format="color" />

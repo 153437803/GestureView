@@ -143,12 +143,25 @@ public final class GestureResultView extends View {
     }
 
     /**
+     * 设置数据
+     *
+     * @param number
+     */
+    public final void setDate(final int[] number) {
+
+        for (int i = 0; i < 9; i++) {
+            mData[i] = number[i];
+        }
+        postInvalidate();
+    }
+
+    /**
      * 设置单个数据
      *
      * @param index
      * @param number
      */
-    public final void setSelect(@IntRange(from = 0, to = 8) final int index, @IntRange(from = 1, to = 9) final int number) {
+    public final void setDate(@IntRange(from = 0, to = 8) final int index, @IntRange(from = 1, to = 9) final int number) {
 
         for (int i = 0; i < 9; i++) {
             if (mData[i] == number) {

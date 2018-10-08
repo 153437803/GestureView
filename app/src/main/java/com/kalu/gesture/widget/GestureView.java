@@ -23,38 +23,38 @@ import java.util.LinkedList;
  * 6>>>7>>>8
  * </p>
  */
-public final class GestureLookView extends View {
+public final class GestureView extends View {
 
+    // 手势
+    private int mMoveX = -1, mMoveY = -1;
     // 半径外圆
-    private int mRadiusOuter = 80;
+    private int mRadiusOuter = 100;
     // 半径内圆
-    private int mRadiusInner = 40;
+    private int mRadiusInner = 50;
     // 颜色圆环
     private int mColorOuter = 0x66FF5442;
     // 颜色选中
     private int mColorSelect = 0xffFF5442;
     // 颜色默认
     private int mColorNormal = 0xffCACCD6;
-    // 路径
-    private final Path mPath = new Path();
     // 画笔
     private final Paint mPaint = new Paint();
     // 数据
     private final int[] mData = new int[]{-1, -1, -1, -1, -1, -1, -1, -1, -1};
-    // 路径
-    private final LinkedList<Integer> mPaths = new LinkedList<>();
+    // 轨迹
+    private final LinkedList<Integer> mLine = new LinkedList<>();
 
     /**********************************************************************************************/
 
-    public GestureLookView(Context context) {
+    public GestureView(Context context) {
         this(context, null, 0);
     }
 
-    public GestureLookView(Context context, @Nullable AttributeSet attrs) {
+    public GestureView(Context context, @Nullable AttributeSet attrs) {
         this(context, attrs, 0);
     }
 
-    public GestureLookView(Context context, @Nullable AttributeSet attrs, int defStyleAttr) {
+    public GestureView(Context context, @Nullable AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
     }
 
@@ -79,17 +79,26 @@ public final class GestureLookView extends View {
         mPaint.setColor(Color.GREEN);
         mPaint.setStrokeWidth(20);
         mPaint.setStyle(Paint.Style.STROKE);
-        mPath.reset();
-        for (int i = 0; i < mPaths.size(); i += 2) {
-            final int x = mPaths.get(i);
-            final int y = mPaths.get(i + 1);
+
+        // step1: 轨迹
+        final Path path = new Path();
+        int size = mLine.size();
+        for (int i = 0; i < size; i += 2) {
+            final int x = mLine.get(i);
+            final int y = mLine.get(i + 1);
             if (i == 0) {
-                mPath.moveTo(x, y);
+                path.moveTo(x, y);
             } else {
-                mPath.lineTo(x, y);
+                path.lineTo(x, y);
+            }
+
+            if (i == size - 2 && mMoveX != -1 && mMoveY != -1) {
+                path.lineTo(mMoveX, mMoveY);
+                mMoveX = -1;
+                mMoveY = -1;
             }
         }
-        canvas.drawPath(mPath, mPaint);
+        canvas.drawPath(path, mPaint);
 
         // 内边距
         final int paddingLeft = getPaddingLeft();
@@ -102,20 +111,20 @@ public final class GestureLookView extends View {
         // 视图高度
         final int height = getHeight() - paddingTop - paddingBottom;
 
-        // 圆点宽度总和
-        final int radiusH = 6 * mRadiusInner;
-        // 圆点高度总和
-        final int radiusV = 6 * mRadiusInner;
+        // 外圆宽度总和
+        final int radiusOuterH = 6 * mRadiusOuter;
+        // 外圆高度总和
+        final int radiusOuterV = 6 * mRadiusOuter;
 
         // 容错提示
-        if (radiusH > width || radiusV > height) {
+        if (radiusOuterH > width || radiusOuterV > height) {
             throw new RuntimeException("圆点宽度总和不能大于视图宽度");
         }
 
         // 间隙宽度水平
-        final int spaceH = (width - radiusH) / 2;
+        final int spaceH = (width - radiusOuterH) / 2;
         // 间隙宽度垂直
-        final int spaceV = (height - radiusV) / 2;
+        final int spaceV = (height - radiusOuterV) / 2;
 
         // 循环
         for (int i = 0; i < 9; i++) {
@@ -123,17 +132,17 @@ public final class GestureLookView extends View {
             final int positionH = (i % 3);
             final int positionV = (i / 3);
 
-            final float cx = mRadiusInner + positionH * (spaceH + 2 * mRadiusInner) + paddingLeft;
-            final float cy = mRadiusInner + positionV * (spaceV + 2 * mRadiusInner) + paddingTop;
-            // Log.e("kalu", "onDraw[预览结果] ==> i =" + i + ", cx = " + cx + ", cy = " + cy);
+            final int cx = mRadiusOuter + positionH * (spaceH + 2 * mRadiusOuter) + paddingLeft;
+            final int cy = mRadiusOuter + positionV * (spaceV + 2 * mRadiusOuter) + paddingTop;
+            Log.e("kalu", "onDraw ==> i =" + i + ", cx = " + cx + ", cy = " + cy);
 
             final int number = mData[i];
             if (number != -1) {
 
                 // 选种颜色外圆
-                mPaint.setColor(mColorSelect);
+                mPaint.setColor(mColorOuter);
                 mPaint.setStyle(Paint.Style.FILL);
-                canvas.drawCircle(cx, cy, mRadiusInner, mPaint);
+                canvas.drawCircle(cx, cy, mRadiusOuter, mPaint);
 
                 // 选种颜色内圆
                 mPaint.setColor(mColorSelect);
@@ -141,11 +150,11 @@ public final class GestureLookView extends View {
                 canvas.drawCircle(cx, cy, mRadiusInner, mPaint);
 
                 // 选中文字
-                mPaint.setColor(0xFF000000);
-                final Paint.FontMetrics fontMetrics = mPaint.getFontMetrics();
-                final float font = fontMetrics.bottom - fontMetrics.top;
-                mPaint.setStyle(Paint.Style.FILL);
-                canvas.drawText(String.valueOf(number), cx, cy + font / 3, mPaint);
+//                mPaint.setColor(0xFF000000);
+//                final Paint.FontMetrics fontMetrics = mPaint.getFontMetrics();
+//                final float font = fontMetrics.bottom - fontMetrics.top;
+//                mPaint.setStyle(Paint.Style.FILL);
+//                canvas.drawText(String.valueOf(number), cx, cy + font / 3, mPaint);
             } else {
 
                 // 默认颜色
@@ -153,6 +162,11 @@ public final class GestureLookView extends View {
                 mPaint.setStyle(Paint.Style.FILL);
                 canvas.drawCircle(cx, cy, mRadiusInner, mPaint);
             }
+
+            // 圆心
+            mPaint.setColor(Color.BLACK);
+            mPaint.setStyle(Paint.Style.FILL);
+            canvas.drawCircle(cx, cy, 5, mPaint);
         }
     }
 
@@ -169,6 +183,12 @@ public final class GestureLookView extends View {
         final int width = getWidth() - paddingRight - paddingLeft;
         // 视图高度
         final int height = getHeight() - paddingTop - paddingBottom;
+
+        // 外圆宽度总和
+        final int radiusOuterH = 6 * mRadiusOuter;
+        // 外圆高度总和
+        final int radiusOuterV = 6 * mRadiusOuter;
+
         // x
         final int x = (int) event.getX();
         // y
@@ -176,96 +196,47 @@ public final class GestureLookView extends View {
 
         switch (event.getAction()) {
             case MotionEvent.ACTION_DOWN:
-                checkDown(x, y, width, height, paddingLeft, paddingBottom);
+                mMoveX = -1;
+                mMoveY = -1;
+                checkDown(x, y, width, height, paddingLeft, paddingBottom, radiusOuterH, radiusOuterV);
+
+                if (null != mOnGestureChangeListener) {
+                    mOnGestureChangeListener.onChange(mData);
+                }
                 break;
             case MotionEvent.ACTION_MOVE:
-                checkMove(x, y, width, height, paddingLeft, paddingBottom);
+                checkMove(x, y, width, height, paddingLeft, paddingBottom, radiusOuterH, radiusOuterV);
+
+                if (null != mOnGestureChangeListener) {
+                    mOnGestureChangeListener.onChange(mData);
+                }
                 break;
             case MotionEvent.ACTION_UP:
-                checkUp(x, y, width, height, paddingLeft, paddingBottom);
+                mMoveX = -1;
+                mMoveY = -1;
+                checkUp(x, y, width, height, paddingLeft, paddingBottom, radiusOuterH, radiusOuterV);
+
+                if (null != mOnGestureChangeListener) {
+                    mOnGestureChangeListener.onChange(mData);
+                }
                 break;
         }
         return true;
     }
 
-    private final void checkMove(final int x, final int y, final int width, final int height, final int paddingLeft, final int paddingTop) {
-
-        Log.e("kalu", "checkMove ==> size = " + mPaths.size());
-        if (mPaths.size() < 2)
-            return;
-
-        // 圆点宽度总和
-        final int radiusH = 6 * mRadiusInner;
-        // 圆点高度总和
-        final int radiusV = 6 * mRadiusInner;
-
-        // 容错提示
-        if (radiusH > width || radiusV > height) {
-            throw new RuntimeException("圆点宽度总和不能大于视图宽度");
-        }
-
-        // 间隙宽度水平
-        final int spaceH = (width - radiusH) / 2;
-        // 间隙宽度垂直
-        final int spaceV = (height - radiusV) / 2;
-
-        // 寻找最大值
-        int max = 0;
-        for (int i = 0; i < 9; i++) {
-            max = Math.max(max, mData[i]);
-        }
-
-        // 循环
-        for (int i = 0; i < 9; i++) {
-
-            final int positionH = (i % 3);
-            final int positionV = (i / 3);
-
-            final int cx = mRadiusInner + positionH * (spaceH + 2 * mRadiusInner) + paddingLeft;
-            final int cy = mRadiusInner + positionV * (spaceV + 2 * mRadiusInner) + paddingTop;
-            // Log.e("kalu", "onDraw[预览结果] ==> i =" + i + ", cx = " + cx + ", cy = " + cy);
-
-            boolean inner = isInner(x, y, cx, cy);
-            if (inner && mData[i] == -1) {
-                mData[i] = max + 1;
-                mPaths.add(cx);
-                mPaths.add(cy);
-                postInvalidate();
-                return;
-            }
-        }
-
-        if (mPaths.size() > 4) {
-            mPaths.removeLast();
-            mPaths.removeLast();
-        }
-
-        mPaths.add(x);
-        mPaths.add(y);
-        postInvalidate();
-    }
-
-    private final void checkDown(final int x, final int y, final int width, final int height, final int paddingLeft, final int paddingTop) {
+    private final void checkDown(final int x, final int y, final int width, final int height, final int paddingLeft, final int paddingTop, final int radiusOuterH, final int radiusOuterV) {
 
         // 清空
-        mPath.reset();
-        mPaths.clear();
+        for (int i = 0; i < 9; i++) {
+            mData[i] = -1;
+        }
+        mLine.clear();
         postInvalidate();
 
-        // 圆点宽度总和
-        final int radiusH = 6 * mRadiusInner;
-        // 圆点高度总和
-        final int radiusV = 6 * mRadiusInner;
-
-        // 容错提示
-        if (radiusH > width || radiusV > height) {
-            throw new RuntimeException("圆点宽度总和不能大于视图宽度");
-        }
-
         // 间隙宽度水平
-        final int spaceH = (width - radiusH) / 2;
+        final int spaceH = (width - radiusOuterH) / 2;
         // 间隙宽度垂直
-        final int spaceV = (height - radiusV) / 2;
+        final int spaceV = (height - radiusOuterV) / 2;
 
         // 寻找最大值
         int max = 0;
@@ -279,41 +250,94 @@ public final class GestureLookView extends View {
             final int positionH = (i % 3);
             final int positionV = (i / 3);
 
-            final int cx = mRadiusInner + positionH * (spaceH + 2 * mRadiusInner) + paddingLeft;
-            final int cy = mRadiusInner + positionV * (spaceV + 2 * mRadiusInner) + paddingTop;
+            final int cx = mRadiusOuter + positionH * (spaceH + 2 * mRadiusOuter) + paddingLeft;
+            final int cy = mRadiusOuter + positionV * (spaceV + 2 * mRadiusOuter) + paddingTop;
             // Log.e("kalu", "onDraw[预览结果] ==> i =" + i + ", cx = " + cx + ", cy = " + cy);
 
             boolean inner = isInner(x, y, cx, cy);
             if (inner) {
                 mData[i] = max + 1;
-                mPaths.add(cx);
-                mPaths.add(cy);
+
+                mLine.add(cx);
+                mLine.add(cy);
+
                 postInvalidate();
                 return;
             }
         }
     }
 
-    private final void checkUp(final int x, final int y, final int width, final int height, final int paddingLeft, final int paddingTop) {
+    private final void checkMove(final int x, final int y, final int width, final int height, final int paddingLeft, final int paddingTop, final int radiusOuterH, final int radiusOuterV) {
 
-        Log.e("kalu", "checkUp ==> size = " + mPaths.size());
-        if (mPaths.size() < 2)
+        final int size = mLine.size();
+        if (size < 2)
             return;
 
-        // 圆点宽度总和
-        final int radiusH = 6 * mRadiusInner;
-        // 圆点高度总和
-        final int radiusV = 6 * mRadiusInner;
-
         // 容错提示
-        if (radiusH > width || radiusV > height) {
+        if (radiusOuterH > width || radiusOuterV > height) {
             throw new RuntimeException("圆点宽度总和不能大于视图宽度");
         }
 
         // 间隙宽度水平
-        final int spaceH = (width - radiusH) / 2;
+        final int spaceH = (width - radiusOuterH) / 2;
         // 间隙宽度垂直
-        final int spaceV = (height - radiusV) / 2;
+        final int spaceV = (height - radiusOuterV) / 2;
+
+        // 寻找最大值
+        int max = 0;
+        for (int i = 0; i < 9; i++) {
+            max = Math.max(max, mData[i]);
+        }
+
+        // 循环
+        for (int i = 0; i < 9; i++) {
+
+            final int positionH = (i % 3);
+            final int positionV = (i / 3);
+
+            final int cx = mRadiusOuter + positionH * (spaceH + 2 * mRadiusOuter) + paddingLeft;
+            final int cy = mRadiusOuter + positionV * (spaceV + 2 * mRadiusOuter) + paddingTop;
+            Log.e("kaluww", "onDraw[预览结果] ==> i =" + i +
+                    ", width = " + width +
+                    ", height = " + height +
+                    ", spaceH = " + spaceH +
+                    ", spaceV = " + spaceV +
+                    ", radius = " + mRadiusOuter +
+                    ", cx = " + cx +
+                    ", cy = " + cy);
+
+            boolean inner = isInner(x, y, cx, cy);
+            if (inner && mData[i] == -1) {
+                mData[i] = max + 1;
+
+                mLine.add(cx);
+                mLine.add(cy);
+
+                postInvalidate();
+                return;
+            }
+        }
+
+        mMoveX = x;
+        mMoveY = y;
+        postInvalidate();
+    }
+
+    private final void checkUp(final int x, final int y, final int width, final int height, final int paddingLeft, final int paddingTop, final int radiusOuterH, final int radiusOuterV) {
+
+        final int size = mLine.size();
+        if (size < 2)
+            return;
+
+        // 容错提示
+        if (radiusOuterH > width || radiusOuterV > height) {
+            throw new RuntimeException("圆点宽度总和不能大于视图宽度");
+        }
+
+        // 间隙宽度水平
+        final int spaceH = (width - radiusOuterH) / 2;
+        // 间隙宽度垂直
+        final int spaceV = (height - radiusOuterV) / 2;
 
         // 寻找最大值
         int max = 0;
@@ -328,23 +352,14 @@ public final class GestureLookView extends View {
             boolean inner = isInner(x, y, i, spaceH, spaceV, paddingLeft, paddingTop);
             if (inner) return;
         }
-
-        mPaths.removeLast();
-        mPaths.removeLast();
-        postInvalidate();
     }
 
     private final boolean isInner(int x, int y, int cx, int cy) {
-        final int left = cx - mRadiusInner;
-        final int right = cx + mRadiusInner;
-        final int top = cy - mRadiusInner;
-        final int bottom = cy + mRadiusInner;
 
-        if (x >= left && x <= right && y >= top && y <= bottom) {
-            return true;
-        } else {
-            return false;
-        }
+        final int rangex = cx - x;
+        final int rangey = cy - y;
+        final double sqrt = Math.sqrt(rangex * rangex + rangey * rangey);
+        return sqrt <= mRadiusOuter;
     }
 
     private final boolean isInner(int x, int y, int i, int spaceH, int spaceV, int paddingLeft, int paddingTop) {
@@ -352,19 +367,13 @@ public final class GestureLookView extends View {
         final int positionH = (i % 3);
         final int positionV = (i / 3);
 
-        final int cx = mRadiusInner + positionH * (spaceH + 2 * mRadiusInner) + paddingLeft;
-        final int cy = mRadiusInner + positionV * (spaceV + 2 * mRadiusInner) + paddingTop;
+        final int cx = mRadiusOuter + positionH * (spaceH + 2 * mRadiusOuter) + paddingLeft;
+        final int cy = mRadiusOuter + positionV * (spaceV + 2 * mRadiusOuter) + paddingTop;
 
-        final int left = cx - mRadiusInner;
-        final int right = cx + mRadiusInner;
-        final int top = cy - mRadiusInner;
-        final int bottom = cy + mRadiusInner;
-
-        if (x >= left && x <= right && y >= top && y <= bottom) {
-            return true;
-        } else {
-            return false;
-        }
+        final int rangex = cx - x;
+        final int rangey = cy - y;
+        final double sqrt = Math.sqrt(rangex * rangex + rangey * rangey);
+        return sqrt <= mRadiusOuter;
     }
 
     /**********************************************************************************************/
@@ -372,8 +381,6 @@ public final class GestureLookView extends View {
     public interface OnGestureChangeListener {
 
         void onChange(int[] data);
-
-        void onError(String message);
     }
 
     private OnGestureChangeListener mOnGestureChangeListener;

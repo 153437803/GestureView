@@ -11,7 +11,7 @@
         android:layout_height="80dp"
         android:layout_marginTop="30dp" />
 
-    <com.kalu.gesture.widget.GestureLookView
+    <com.kalu.gesture.widget.GestureView
         android:id="@+id/gd_gesture_draw"
         android:layout_width="300dp"
         android:layout_height="300dp"
