@@ -1,21 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!--手势绘制View-->
+
     <declare-styleable name="GestureView">
-        <!--外圆半径、颜色、水平间距、垂直间距-->
-        <attr name="gdOuterRadius" format="integer" />
-        <attr name="gdOuterCheckCol" format="color" />
-        <attr name="gdOuterHorizontalSpace" format="integer" />
-        <attr name="gdOuterVerticalSpace" format="integer" />
-        <!--内圆半径、未选中颜色、选中颜色、连线颜色、连线宽度-->
-        <attr name="gdInnerRadius" format="integer" />
-        <attr name="gdInnerNormalCol" format="color" />
-        <attr name="gdInnerCheckedCol" format="color" />
-        <attr name="gdLineCol" format="color" />
-        <attr name="gdLineWidth" format="integer" />
+        <attr name="gv_outer_radius" format="reference|integer" />
+        <attr name="gv_outer_color" format="reference|integer" />
+        <attr name="gv_inner_radius" format="reference|color" />
+        <attr name="gv_inner_color" format="reference|color" />
+        <attr name="gv_line_color" format="reference|color" />
+        <attr name="gv_line_width" format="reference|color" />
     </declare-styleable>
 
-    <!--手势绘制结果View-->
     <declare-styleable name="GestureResultView">
         <!--半径-->
         <attr name="grv_radius" format="integer|reference" />
