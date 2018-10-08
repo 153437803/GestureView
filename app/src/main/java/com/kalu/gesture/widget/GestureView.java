@@ -359,7 +359,7 @@ public final class GestureView extends View {
         final int rangex = cx - x;
         final int rangey = cy - y;
         final double sqrt = Math.sqrt(rangex * rangex + rangey * rangey);
-        return sqrt <= mRadiusOuter;
+        return sqrt <= mRadiusInner;
     }
 
     private final boolean isInner(int x, int y, int i, int spaceH, int spaceV, int paddingLeft, int paddingTop) {
@@ -373,7 +373,7 @@ public final class GestureView extends View {
         final int rangex = cx - x;
         final int rangey = cy - y;
         final double sqrt = Math.sqrt(rangex * rangex + rangey * rangey);
-        return sqrt <= mRadiusOuter;
+        return sqrt <= mRadiusInner;
     }
 
     /**********************************************************************************************/
